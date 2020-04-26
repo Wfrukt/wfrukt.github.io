@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>Парсер</title>
+    <script src="peg.js" type="text/javascript"></script>
+    <script src="main.js" type="text/javascript"></script>
+</head>
+
+<textarea id="textIn" rows="5">vidi koto muso</textarea>
+<button class="myButton" id="btn">Построить дерево</button>
+
+<div id="divOut"></div>
+
+<style>
+body{
+ font-size:15px;
+ font-family:Arial;
+}
+#textIn{
+    width: 100%;
+}
+
+#divOut{
+    width: 100%;
+}
+
+ul {
+  padding-left: 1em;
+  list-style-type: none;
+}
+
+.myButton {
+	box-shadow:inset 0px 1px 0px 0px #54a3f7;
+	background:linear-gradient(to bottom, #007dc1 5%, #0061a7 100%);
+	background-color:#007dc1;
+	border-radius:5px;
+	border:1px solid #124d77;
+	display:inline-block;
+	cursor:pointer;
+	color:#ffffff;
+	font-family:Arial;
+	font-size:15px;
+	padding:6px 24px;
+	text-decoration:none;
+	text-shadow:0px 1px 0px #154682;
+}
+.myButton:hover {
+	background:linear-gradient(to bottom, #0061a7 5%, #007dc1 100%);
+	background-color:#0061a7;
+}
+.myButton:active {
+	position:relative;
+	top:1px;
+}
+
+
+</style>
+
