@@ -1,168 +1,104 @@
 {
-
-function createVerb(word,lsArg){
-  let debug = word+"("+lsArg.map(e => e.debug).join(" ")+")";
-  return { type: "verb", word, lsArg, debug }
+function isLoad(list){
+  return list && list.length
 }
 
+function createVerb(word,lsArg,lsPglg1,lsPglg2){
+  let lsPglg = [];
+  if(isLoad(lsPglg1)) lsPglg = lsPglg.concat(lsPglg1);
+  if(isLoad(lsPglg2)) lsPglg = lsPglg.concat(lsPglg2);
+  let debug = word+"("+lsArg.map(e => e.debug).join(" ");
+  if(isLoad(lsPglg)) debug = debug + " "+lsPglg.map(e => e.debug).join(" ");
+  debug = debug + ")";
+  return { type: "verb", word, lsArg, lsPglg, debug };
 }
 
-sentence = _ arg:arg { return arg }
+function createNoun(word,lsAdj,arg){
+  let debug = word;
+  if(isLoad(lsAdj)) debug = debug +"["+ lsAdj.map(e => e.debug).join(" ")+"]";
+  if(arg) debug = debug + "#" + arg.debug;
+  return { type: "noun", word, lsAdj,arg, debug };
+}
+
+function createAdj(word,arg){
+  let debug = word;
+  if(arg) debug = debug + "#" + arg.debug;
+  return { type: "adj", word, arg, debug };
+}
+
+function createPglg(word,arg){
+  let debug = word;
+  if(arg) debug = debug + "#" + arg.debug;
+  return { type: "pglg", word, arg, debug };
+}
+
+function createList(head,tail){
+  tail.unshift(head);
+  return tail;
+}
+}
+
+sentence = _ arg:arg { return arg; }
 
 arg "arg" = verbPhrase / nounPhrase
 
-nounPhrase "nounPhrase" = word:noun _ lsAdj:(listAdj)? {
-  let debug = [word];
-  if(lsAdj && lsAdj.length){
-    debug.push("[");
-    lsAdj.forEach(e => {
-        debug.push(e.debug);
-    });
-    debug.pop();
-    debug.push("]");
-  }
-  return { type: "noun", word, lsAdj, debug:debug.join("") };
+verbPhrase "verbPhrase" =  word:verb2 lsPrlg1:listPglg? arg1:arg arg2:arg lsPrlg2:listPglg? {
+  return createVerb(word,[arg1,arg2],lsPrlg1,lsPrlg2);
+} / word:verb1 lsPrlg1:listPglg? arg1:arg lsPrlg2:listPglg?{
+  return createVerb(word,[arg1],lsPrlg1,lsPrlg2);
 }
 
-listAdj "listAdj" = head:adj tail:(_ adj)* {
-  let list = tail.map(elem => {return elem[1]});
-  list.unshift(head);
-  return list.map(e => {
-  	return { type: "adj", word: e, arg: null,debug:e };
-  });
+nounPhrase "nounPhrase" =  word:noun1 lsAdj:listAdj? arg:arg  {
+   return createNoun(word,lsAdj,arg);
+} / word:noun0 lsAdj:listAdj? {
+   return createNoun(word,lsAdj,null);
 }
 
-verbPhrase "verbPhrase" = verbPhrase2 / verbPhrase1
-
-verbPhrase1 "verbPhrase1" = word:verb1 _ arg1:arg {
-  return createVerb(word,[arg1]);
+listAdj "listAdj" = head:adjPhrase tail:adjPhrase* {
+  return createList(head,tail);
 }
 
-verbPhrase2 "verbPhrase2" = word:verb2 _ arg1:arg _ arg2:arg {
-  return createVerb(word,[arg1,arg2]);
+listPglg "listPrgl" = head:pglgPhrase tail:pglgPhrase* {
+  return createList(head,tail);
 }
 
-verb2 "verb2" = (!endVerb [a-z])+ endVerb { return text().trim(); }
+pglgPhrase = word:pglg1 arg:arg {
+  return createPglg(word,arg);
+} / word:pglg0 {
+  return createPglg(word,null);
+}
 
-verb1 "verb1" = (!endVerb [a-z])+ endVerb { return text().trim(); }
+adjPhrase = word:adj1 arg:arg {
+  return createAdj(word,arg);
+} / word:adj0 {
+  return createAdj(word,null);
+}
 
-noun "noun" = (!endNoun [a-z])+ endNoun { return text().trim(); }
+verb2 "verb2" = (!tailVerb2 prefix)* tailVerb2 { return text().trim(); }
+verb1 "verb1" = (!tailVerb1 prefix)* tailVerb1 { return text().trim(); }
+noun0 "noun0" = (!tailNoun0 prefix)* tailNoun0 { return text().trim(); }
+noun1 "noun1" = (!tailNoun1 prefix)* tailNoun1 { return text().trim(); }
+adj0 "adj0" = (!tailAdj0 prefix)* tailAdj0 { return text().trim(); }
+adj1 "adj1" = (!tailAdj1 prefix)* tailAdj1 { return text().trim(); }
+pglg0 "pglg0" = (!tailPglg0 prefix)* tailPglg0 { return text().trim(); }
+pglg1 "pglg1" = (!tailPglg1 prefix)* tailPglg1 { return text().trim(); }
 
-adj "adj" = (!endAdj [a-z])+ endAdj { return text().trim(); }
+tailVerb1 "tailNoun1" = tors1 endVerb
+tailVerb2 "tailNoun2" = tors2 endVerb
+tailNoun0 "tailNoun0" = tors1 endNoun
+tailNoun1 "tailNoun1" = tors2 endNoun
+tailAdj0 "tailAdj0" = tors1 endAdj
+tailAdj1 "tailAdj1" = tors2 endAdj
+tailPglg0 "tailPglg0" = tors1 endPglg
+tailPglg1 "tailPglg1" = tors2 endPglg
 
+tors1 "tors1" = (rootVerb ("ul"/"eg"/"as") / rootNoun)
+tors2 "tors2" = rootVerb ("ot"/"ap"/"id")?
+
+endVerb "endAdj" = "i" eow
 endNoun "endNoun" = "o" eow
-
-endVerb "endVerb" = ("ani" / "uli" / "egi" / "oti") eow
-
 endAdj "endAdj" = "a" eow
-
-root "root" = [a-z]+
-
-eow = " " / !.
-
-_ "whitespace"
-  = [ \t\n\r]*
-
-/*
-{
-
-function createVerb(word,lsArg){
-  let debug = word+"("+lsArg.map(e => e.debug).join(" ")+")";
-  return { type: "verb", word, lsArg, debug }
-}
-
-}
-/*
-sentence = arg:arg { return arg.debug }
-
-arg "arg" = verbPhrase / nounPhrase
-
-nounPhrase "nounPhrase" = (word:noun _ lsAdj:listAdj? arg) / (word:noun _ lsAdj:listAdj?){
-  let debug = [word];
-  if(lsAdj && lsAdj.length){
-    debug.push("[");
-    lsAdj.forEach(e => {
-        debug.push(e.debug);
-    });
-    debug.pop();
-    debug.push("]");
-  }
-  return { type: "noun", word, lsAdj, debug:debug.join("") };
-}
-
-
-
-verbPhrase "verbPhrase" = verbPhrase2 / verbPhrase1
-
-verbPhrase1 "verbPhrase1" = word:verb1 _ arg1:arg {
-  return createVerb(word,[arg1]);
-}
-
-verbPhrase2 "verbPhrase2" = word:verb2 _ arg1:arg _ arg2:arg {
-  return createVerb(word,[arg1,arg2]);
-}
-
-verb2 "verb2" = (!endVerb2 [a-z])+ endVerb2 { return text().trim(); }
-
-verb1 "verb1" = (!endVerb [a-z])+ endVerb { return text().trim(); }
-*/
-sentence = _ arg:arg { return arg.debug }
-
-arg "arg" = nounPhraseA / nounPhrase
-
-nounPhrase "nounPhrase" = word:noun _ lsAdj:listAdj?{
-  let debug = [word];
-  if(lsAdj && lsAdj.length){
-    debug.push("[");
-    lsAdj.forEach(e => {
-        debug.push(e.debug);
-        debug.push(",");
-    });
-    debug.pop();
-    debug.push("]");
-  }
-  return { type: "noun", word, lsAdj, debug:debug.join("") };
-}
-
-nounPhraseA "nounPhraseA" = word:nounA _ lsAdj:listAdj? arg{
-  let debug = [word];
-  if(lsAdj && lsAdj.length){
-    debug.push("[");
-    lsAdj.forEach(e => {
-        debug.push(e.debug);
-        debug.push(",");
-    });
-    debug.pop();
-    debug.push("]");
-  }
-  return { type: "noun", word, lsAdj, debug:debug.join("") };
-}
-
-listAdj "listAdj" = head:adj tail:(_ adj)* {
-  let list = tail.map(elem => elem[1]);
-  list.unshift(head);
-  return list.map(e => {
-  	return { type: "adj", word: e, arg: null,debug:e };
-  });
-}
-
-noun "noun" = (!tailNoun prefix)* tailNoun { return text().trim(); }
-
-tailNoun "tailNoun" = (rootVerb ("ul"/"eg"/"as") / rootNoun) "o" eow
-
-nounA "nounA" = (!tailNounA prefix)* tailNounA { return text().trim(); }
-
-tailNounA "tailNoun" = rootVerb ("ot"/"ap"/"id")? "o" eow
-
-adj "adj" = (!tailAdj [a-z])+ tailAdj { return text().trim(); }
-
-tailAdj "adj" = ksnt "a" eow
-
-endVerb2 "endVerb2" = ("noti" / "napi" / "nidi" / "ni") eow
-
-endVerb "endVerb" = ("nuli" / "negi" / "nasi" / "i" ) eow
-
-endAdj "endAdj" = "a" eow
+endPglg "endPrlg" = "e" eow
 
 rootNoun "rootNoun" = ksntButN vcl ksntButN
 rootVerb "rootVerb" = ksnt vcl "n"

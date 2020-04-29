@@ -17,29 +17,43 @@ function genHtml(sent){
   return html.join("");
 }
 
+let hintArg = "^";
+
 function rekHtml(sent,html,ctx){
   html.push("<li>");
   if(sent.type == "noun"){
     addWord(sent.word,html,ctx);
-    if(sent.lsAdj && sent.lsAdj.length){
-      html.push("<ul>");
-      sent.lsAdj.forEach(e => rekHtml(e,html,null));
-      html.push("</ul>");
-    }
+    if(sent.arg || isLoad(sent.lsAdj)) html.push("<ul>");
+    if(sent.arg) rekHtml(sent.arg,html,"*");
+    if(isLoad(sent.lsAdj)) sent.lsAdj.forEach(e => rekHtml(e,html,null));
+    if(sent.arg || isLoad(sent.lsAdj)) html.push("</ul>");
   } else if(sent.type == "verb"){
     addWord(sent.word,html,ctx);
-    if(sent.lsArg && sent.lsArg.length){
-      html.push("<ul>");
-      sent.lsArg.forEach((e,i) => rekHtml(e,html,i+1));
-      html.push("</ul>");
-    }
+    if(isLoad(sent.lsArg) || isLoad(sent.lsPglg)) html.push("<ul>");
+    if(isLoad(sent.lsArg)) sent.lsArg.forEach((e,i) => rekHtml(e,html,hintArg+(i+1)));
+    if(isLoad(sent.lsPglg)) sent.lsPglg.forEach((e,i) => rekHtml(e,html,null));
+    if(isLoad(sent.lsArg) || isLoad(sent.lsPglg)) html.push("</ul>");
   } else if(sent.type == "adj"){
     html.push(sent.word);
-  } else throw "unknown type: "+sent.type
+    if(sent.arg) html.push("<ul>");
+    if(sent.arg) rekHtml(sent.arg,html,hintArg);
+    if(sent.arg) html.push("</ul>");
+  } else if(sent.type == "pglg"){
+    html.push(sent.word);
+    if(sent.arg) html.push("<ul>");
+    if(sent.arg) rekHtml(sent.arg,html,hintArg);
+    if(sent.arg) html.push("</ul>");
+  }
+
+  else throw "unknown type: "+sent.type
   html.push("</li>");
 }
 
 function addWord(word,html,ctx){
-  if(ctx) html.push(word + " ("+ctx+")");
+  if(ctx) html.push(word + " "+ctx);
   else html.push(word);
+}
+
+function isLoad(list){
+  return list && list.length
 }
