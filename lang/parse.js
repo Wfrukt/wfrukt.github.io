@@ -24,7 +24,7 @@ function rekHtml(sent,html,ctx){
   if(sent.type == "noun"){
     addWord(sent.word,html,ctx);
     if(sent.arg || isLoad(sent.lsAdj)) html.push("<ul>");
-    if(sent.arg) rekHtml(sent.arg,html,"*");
+    if(sent.arg) rekHtml(sent.arg,html,"^");
     if(isLoad(sent.lsAdj)) sent.lsAdj.forEach(e => rekHtml(e,html,null));
     if(sent.arg || isLoad(sent.lsAdj)) html.push("</ul>");
   } else if(sent.type == "verb"){
