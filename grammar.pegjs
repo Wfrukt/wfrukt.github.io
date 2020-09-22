@@ -106,7 +106,7 @@ prefix "prefix" = ksnt vcl "j"?
 
 ksnt "consonant" = [rtpsdfghklzxcvbnm]
 ksntButN "consonantWithoutN" = [rtpsdfghklzxcvbm]
-vcl "vocalic" = [aouie]
+vcl "vowel" = [aouie]
 
 eow = " " / !.
 
